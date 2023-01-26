@@ -12,15 +12,22 @@ import requests
 import os
 from dotenv import load_dotenv
 
+
 load_dotenv('//home/ni_whale/Documents/projects/Python/storage.env')
 
 TODOIST_API_TOKEN = os.getenv('TODOIST_API_TOKEN')
-TODOIST_API_URL = "https://api.todoist.com/sync/v9/sync"
+# TODOIST_API_URL = "https://api.todoist.com/sync/v9/sync"
+TODOIST_API_URL = "https://api.todoist.com/sync/v9/completed/get_all"
 
 headers = {'Authorization': f'Bearer {TODOIST_API_TOKEN}'}
+# params = {
+#     'sync_token': "*",
+#     'resource_types': '["completed/get_all "]'
+# }
 params = {
-    'sync_token': "*",
-    'resource_types': '["projects"]'
+    'since': '2022-12-1T00:00:00',
+    'until': '2022-12-31T23:59:59',
+    'limit': 200
 }
 
 
