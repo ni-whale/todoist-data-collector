@@ -2,7 +2,7 @@ import requests
 import os
 from dotenv import load_dotenv
 import json
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 load_dotenv('//home/ni_whale/Documents/projects/Python/storage.env')
 
@@ -15,11 +15,14 @@ class TodoistApi:
         self.headers = {'Authorization': f'Bearer {self.TODOIST_API_TOKEN}'}
 
     def get_previous_month(self):
-        today = datetime.now()
-        first = today.replace(day=1)
-        last_month = first - timedelta(days=1)
-        date = last_month.isoformat()
-        print(f'{date}')
+        dt = date.today()
+        first_day_of_the_current_month = (datetime.combine(dt, datetime.min.time())).replace(day=1)  # get the first
+        # day of the month + reset time to 00:00:00
+        last_day_of_the_previous_month = first_day_of_the_current_month - timedelta(days=1)
+        first_day_of_the_previous_month = (last_day_of_the_previous_month.replace(day=1)).isoformat()  # getting the
+        # last day of the previous month and replacing it with the first one + converting it to the ISO format
+        previous_month = [first_day_of_the_previous_month, last_day_of_the_previous_month.replace(hour=23, minute=59, second=59).isoformat()]
+        return previous_month[1]
 
     def todoist_auth(self, date_since, date_until):
         params = {
