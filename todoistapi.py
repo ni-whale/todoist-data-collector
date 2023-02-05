@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import json
 from datetime import date, datetime, timedelta
+from operator import itemgetter
 
 load_dotenv('//home/ni_whale/Documents/projects/Python/storage.env')
 
@@ -19,6 +20,35 @@ def get_previous_month():
     return previous_month  # returns [1st day of the month, last day of the month] in format yyyy-mm-ddThh:mm:ss
 
 
+# def write_to_file_first_quety(todoist_data):
+#     with open('date.json', 'w') as f:
+#         for key, value in todoist_data.items():
+#             if key == "items":
+#                 json.dump(value, f, ensure_ascii=False, indent=4)
+#                 date_for_the_second_query = list(map(itemgetter('completed_at'), value[-1::]))
+#                 print(f'The last task from the 1st query: {date_for_the_second_query}')
+#     return date_for_the_second_query
+
+def test(todoist_data):
+    # TODO: I need to figure out how to store a json load of the first iteration of the query then take a date of the last task from it. And finally use this date for the next query + writing everything inside the file.
+    with open('date.json', 'w') as f:
+        for key, value in todoist_data.items():
+            if key == "items":
+                json.dump(value, f, ensure_ascii=False, indent=4)
+                date_for_the_second_query = list(map(itemgetter('completed_at'), value[-1::]))
+                print(f'The last task from the 1st query: {date_for_the_second_query}')
+    return date_for_the_second_query
+
+
+def test1():
+    date_range = get_previous_month()
+
+    params = {
+        'since': date_range[0],
+        'until': date_range[1],
+        'limit': 200
+    }
+
 class TodoistApi:
     def __init__(self):
         self.TODOIST_API_TOKEN = os.getenv('TODOIST_API_TOKEN')
@@ -28,13 +58,8 @@ class TodoistApi:
 
     def todoist_data_collector(self):
 
-        date_range = get_previous_month()
 
-        params = {
-            'since': date_range[0],
-            'until': date_range[1],
-            'limit': 200
-        }
+
         # params = {
         #     'since': '2022-12-1T00:00:00',
         #     'until': '2022-12-07T18:48:36.000000Z',
@@ -50,10 +75,9 @@ class TodoistApi:
             response = requests.get(self.TODOIST_API_URL, params=params, headers=self.headers)
             response.raise_for_status()
             todoist_data = response.json()
-            with open('date.json', 'w') as f:
-                for key, value in todoist_data.items():
-                    if key == "items":
-                        json.dump(value, f, ensure_ascii=False, indent=4)
+
+
+
 
 
             # print(todoist_data)
