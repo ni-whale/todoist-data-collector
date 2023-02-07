@@ -29,25 +29,18 @@ def get_previous_month():
 #                 print(f'The last task from the 1st query: {date_for_the_second_query}')
 #     return date_for_the_second_query
 
-def test(todoist_data):
-    # TODO: I need to figure out how to store a json load of the first iteration of the query then take a date of the last task from it. And finally use this date for the next query + writing everything inside the file.
-    with open('date.json', 'w') as f:
-        for key, value in todoist_data.items():
-            if key == "items":
-                json.dump(value, f, ensure_ascii=False, indent=4)
-                date_for_the_second_query = list(map(itemgetter('completed_at'), value[-1::]))
-                print(f'The last task from the 1st query: {date_for_the_second_query}')
-    return date_for_the_second_query
 
 
-def test1():
+def request_params():
+    # TODO: Change it to have a possibility to call the func with different parameters for use it in the second request to API
     date_range = get_previous_month()
-
     params = {
         'since': date_range[0],
         'until': date_range[1],
         'limit': 200
     }
+    return params
+
 
 class TodoistApi:
     def __init__(self):
@@ -55,40 +48,46 @@ class TodoistApi:
         self.TODOIST_API_URL = "https://api.todoist.com/sync/v9/completed/get_all"
         # self.TODOIST_API_URL = "https://api.todoist.com/sync/v9/sync"
         self.headers = {'Authorization': f'Bearer {self.TODOIST_API_TOKEN}'}
+        self.tasks = []
+
+    def tasks_collection(self, todoist_data, request_iteration):  # In general, I need only 2 iterations for getting
+        # information in API. For the second iteration, I don't need to get the date of the last task, so I'm limiting
+        # the return of this value
+        for key, value in todoist_data.items():
+            if key == "items":
+                self.tasks.append(value)
+                if request_iteration == 0:
+                    date_for_the_second_query = list(map(itemgetter('completed_at'), value[-1::]))
+                    print(f'The last task from the 1st query: {date_for_the_second_query[0]}')
+                    return date_for_the_second_query[0]
+
+                # print(f"tasks = {tasks[0]}")
 
     def todoist_data_collector(self):
-
-
-
-        # params = {
-        #     'since': '2022-12-1T00:00:00',
-        #     'until': '2022-12-07T18:48:36.000000Z',
-        #     'limit': 200
-        # }
-
-        # params = {
-        #     'sync_token': "*",
-        #     'resource_types': '["completed/get_all "]'
-        # }
-        ...
         try:
-            response = requests.get(self.TODOIST_API_URL, params=params, headers=self.headers)
+            response = requests.get(self.TODOIST_API_URL, params=request_params(), headers=self.headers)
             response.raise_for_status()
             todoist_data = response.json()
-
-
-
-
-
+            print(self.tasks_collection(todoist_data, 0))
+            print(get_previous_month())
             # print(todoist_data)
         except Exception as error:
             print(error)
-
-
-
 
 # last_item = list(todoist_data['items'])[-1::]
 # # print(last_item)
 #
 # for date in last_item:
 #     the_last_date = date['completed_at']
+
+
+# params = {
+#     'since': '2022-12-1T00:00:00',
+#     'until': '2022-12-07T18:48:36.000000Z',
+#     'limit': 200
+# }
+
+# params = {
+#     'sync_token': "*",
+#     'resource_types': '["completed/get_all "]'
+# }
