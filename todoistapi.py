@@ -30,10 +30,9 @@ def get_previous_month():
 #     return date_for_the_second_query
 
 
-
-def request_params():
-    # TODO: Change it to have a possibility to call the func with different parameters for use it in the second request to API
-    date_range = get_previous_month()
+def request_params(date_range):
+    # TODO: Change it to have a possibility to call the func with different parameters for use it in the second
+    #  request to API
     params = {
         'since': date_range[0],
         'until': date_range[1],
@@ -61,16 +60,25 @@ class TodoistApi:
                     print(f'The last task from the 1st query: {date_for_the_second_query[0]}')
                     return date_for_the_second_query[0]
 
-                # print(f"tasks = {tasks[0]}")
+    def request_get(self, params):
+        response = requests.get(self.TODOIST_API_URL, params=params, headers=self.headers)
+        response.raise_for_status()
+        todoist_data = response.json()
+        return todoist_data
 
-    def todoist_data_collector(self):
+    def todoist_api_call(self):
         try:
-            response = requests.get(self.TODOIST_API_URL, params=request_params(), headers=self.headers)
-            response.raise_for_status()
-            todoist_data = response.json()
-            print(self.tasks_collection(todoist_data, 0))
-            print(get_previous_month())
-            # print(todoist_data)
+            # response = requests.get(self.TODOIST_API_URL, params=request_params(), headers=self.headers)
+            # response.raise_for_status()
+            # todoist_data = response.json()
+            date_of_the_last_task = self.request_get(request_params(get_previous_month()))  # Here I'm achieving 2 aims:
+            # 1. I'm making a first call to API and getting all tasks with the limit of 200 items;
+            # 2. I'm getting a date of the last task to use for the next call
+            date_range_for_2nd_request = [get_previous_month()[0],
+                                          self.tasks_collection(date_of_the_last_task, 0)]  # we are
+            # getting the list of 'since' date from the previous month and 'until' from the date of the last task
+            print(date_range_for_2nd_request)
+            print(self.request_get(request_params(date_range_for_2nd_request)))
         except Exception as error:
             print(error)
 
