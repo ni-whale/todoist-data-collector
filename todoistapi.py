@@ -31,8 +31,6 @@ def get_previous_month():
 
 
 def request_params(date_range):
-    # TODO: Change it to have a possibility to call the func with different parameters for use it in the second
-    #  request to API
     params = {
         'since': date_range[0],
         'until': date_range[1],
@@ -49,16 +47,15 @@ class TodoistApi:
         self.headers = {'Authorization': f'Bearer {self.TODOIST_API_TOKEN}'}
         self.tasks = []
 
-    def tasks_collection(self, todoist_data, request_iteration):  # In general, I need only 2 iterations for getting
+    def tasks_collection(self, todoist_data):  # In general, I need only 2 iterations for getting
         # information in API. For the second iteration, I don't need to get the date of the last task, so I'm limiting
         # the return of this value
         for key, value in todoist_data.items():
             if key == "items":
                 self.tasks.append(value)
-                if request_iteration == 0:
-                    date_for_the_second_query = list(map(itemgetter('completed_at'), value[-1::]))
-                    print(f'The last task from the 1st query: {date_for_the_second_query[0]}')
-                    return date_for_the_second_query[0]
+                date_for_the_second_query = list(map(itemgetter('completed_at'), value[-1::]))
+                print(f'The last task from the 1st query: {date_for_the_second_query[0]}')
+                return date_for_the_second_query[0]
 
     def request_get(self, params):
         response = requests.get(self.TODOIST_API_URL, params=params, headers=self.headers)
@@ -66,19 +63,23 @@ class TodoistApi:
         todoist_data = response.json()
         return todoist_data
 
+# TODO: I need to find a way to reset hh:mm:ss for self.tasks_collection(getting_json_data) to compare it with the absolute value for the first day of the month.
     def todoist_api_call(self):
+        get_to_the_end = False  # It will have a False while till we get tasks for the whole month
         try:
-            # response = requests.get(self.TODOIST_API_URL, params=request_params(), headers=self.headers)
-            # response.raise_for_status()
-            # todoist_data = response.json()
-            date_of_the_last_task = self.request_get(request_params(get_previous_month()))  # Here I'm achieving 2 aims:
-            # 1. I'm making a first call to API and getting all tasks with the limit of 200 items;
-            # 2. I'm getting a date of the last task to use for the next call
-            date_range_for_2nd_request = [get_previous_month()[0],
-                                          self.tasks_collection(date_of_the_last_task, 0)]  # we are
-            # getting the list of 'since' date from the previous month and 'until' from the date of the last task
-            print(date_range_for_2nd_request)
-            print(self.request_get(request_params(date_range_for_2nd_request)))
+            while not get_to_the_end:
+                getting_json_data = self.request_get(
+                    request_params(get_previous_month()))  # I'm making a first call to API and getting all tasks
+                # with the limit of 200 items;
+
+                print(f"Checking: {type(self.tasks_collection(getting_json_data))}")  # .replace(hour=00, minute=00, second=00)
+
+                date_range_for_the_next_request = [get_previous_month()[0],
+                                                   self.tasks_collection(getting_json_data)]  # we are
+                # getting the list of 'since' date from the previous month and 'until' from the date of the last task
+                print(date_range_for_the_next_request)
+                # print(self.request_get(request_params(date_range_for_the_next_request)))
+                get_to_the_end = True
         except Exception as error:
             print(error)
 
