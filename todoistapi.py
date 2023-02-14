@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import json
 from datetime import date, datetime, timedelta
+from dateutil import parser
 from operator import itemgetter
 
 load_dotenv('//home/ni_whale/Documents/projects/Python/storage.env')
@@ -53,9 +54,9 @@ class TodoistApi:
         for key, value in todoist_data.items():
             if key == "items":
                 self.tasks.append(value)
-                date_for_the_second_query = list(map(itemgetter('completed_at'), value[-1::]))
-                print(f'The last task from the 1st query: {date_for_the_second_query[0]}')
-                return date_for_the_second_query[0]
+                date_of_the_last_task_from_the_query = list(map(itemgetter('completed_at'), value[-1::]))
+                # print(f'The last task from the 1st query: {date_of_the_last_task_from_the_query[0]}')
+                return date_of_the_last_task_from_the_query[0]
 
     def request_get(self, params):
         response = requests.get(self.TODOIST_API_URL, params=params, headers=self.headers)
@@ -63,22 +64,22 @@ class TodoistApi:
         todoist_data = response.json()
         return todoist_data
 
-# TODO: I need to find a way to reset hh:mm:ss for self.tasks_collection(getting_json_data) to compare it with the absolute value for the first day of the month.
+
     def todoist_api_call(self):
         get_to_the_end = False  # It will have a False while till we get tasks for the whole month
+        getting_json_data = self.request_get(
+            request_params(get_previous_month()))  # I'm making a first call to API and getting all tasks
+        # with the limit of 200 items;
         try:
             while not get_to_the_end:
-                getting_json_data = self.request_get(
-                    request_params(get_previous_month()))  # I'm making a first call to API and getting all tasks
-                # with the limit of 200 items;
-
-                print(f"Checking: {type(self.tasks_collection(getting_json_data))}")  # .replace(hour=00, minute=00, second=00)
+                # TODO: I need to compare the last day from the task I will get from the first query with the 1st day of the month. It will let me decide if another query is needed.
+                until_date_for_the_next_query = parser.parse(self.tasks_collection(getting_json_data)).replace(hour=00, minute=00, second=00).isoformat()
 
                 date_range_for_the_next_request = [get_previous_month()[0],
-                                                   self.tasks_collection(getting_json_data)]  # we are
+                                                   until_date_for_the_next_query]  # we are
                 # getting the list of 'since' date from the previous month and 'until' from the date of the last task
-                print(date_range_for_the_next_request)
-                # print(self.request_get(request_params(date_range_for_the_next_request)))
+                print(f"date_range_for_the_next_request = {date_range_for_the_next_request}")
+                print(self.request_get(request_params(date_range_for_the_next_request)))
                 get_to_the_end = True
         except Exception as error:
             print(error)
