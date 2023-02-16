@@ -73,13 +73,19 @@ class TodoistApi:
         try:
             while not get_to_the_end:
                 # TODO: I need to compare the last day from the task I will get from the first query with the 1st day of the month. It will let me decide if another query is needed.
-                until_date_for_the_next_query = parser.parse(self.tasks_collection(getting_json_data)).replace(hour=00, minute=00, second=00).isoformat()
+                until_date_for_the_next_query = (parser.parse(self.tasks_collection(getting_json_data)).replace(hour=00, minute=00, second=00).isoformat()).replace("+00:00", "")
 
                 date_range_for_the_next_request = [get_previous_month()[0],
                                                    until_date_for_the_next_query]  # we are
                 # getting the list of 'since' date from the previous month and 'until' from the date of the last task
                 print(f"date_range_for_the_next_request = {date_range_for_the_next_request}")
-                print(self.request_get(request_params(date_range_for_the_next_request)))
+                # print(self.request_get(request_params(date_range_for_the_next_request)))
+                test = datetime(2023, 1, 14).isoformat()
+                print(f"test = {test}")
+                if until_date_for_the_next_query == test:
+                    print(True)
+                else:
+                    print(False)
                 get_to_the_end = True
         except Exception as error:
             print(error)
