@@ -48,14 +48,13 @@ class TodoistApi:
         self.headers = {'Authorization': f'Bearer {self.TODOIST_API_TOKEN}'}
         self.tasks = []
 
-    def tasks_collection(self, todoist_data):  # In general, I need only 2 iterations for getting
-        # information in API. For the second iteration, I don't need to get the date of the last task, so I'm limiting
-        # the return of this value
+    def tasks_collection(self, todoist_data):
+        # with open('date.json', 'w') as f:
         for key, value in todoist_data.items():
             if key == "items":
                 self.tasks.append(value)
                 date_of_the_last_task_from_the_query = list(map(itemgetter('completed_at'), value[-1::]))
-                # print(f'The last task from the 1st query: {date_of_the_last_task_from_the_query[0]}')
+                # print(f'The last task from the query: {date_of_the_last_task_from_the_query[0]}')
                 return date_of_the_last_task_from_the_query[0]
 
     def request_get(self, params):
@@ -72,20 +71,20 @@ class TodoistApi:
         # with the limit of 200 items;
         try:
             while not get_to_the_end:
-                # TODO: I need to compare the last day from the task I will get from the first query with the 1st day of the month. It will let me decide if another query is needed.
                 until_date_for_the_next_query = (parser.parse(self.tasks_collection(getting_json_data)).replace(hour=00, minute=00, second=00).isoformat()).replace("+00:00", "")
-
                 date_range_for_the_next_request = [get_previous_month()[0],
                                                    until_date_for_the_next_query]  # we are
                 # getting the list of 'since' date from the previous month and 'until' from the date of the last task
-                print(f"date_range_for_the_next_request = {date_range_for_the_next_request}")
-                # print(self.request_get(request_params(date_range_for_the_next_request)))
-                if until_date_for_the_next_query == get_previous_month()[0]:
-                    print(True)
+
+                if until_date_for_the_next_query == get_previous_month()[0]:  # compare the date I got from the last
+                    # task of the query and date of the 1st day of the previous month
+                    print(f'Dates are identical = {True}')
                     get_to_the_end = True
                 else:
-                    print(False)
-                    self.request_get(request_params(date_range_for_the_next_request))
+                    print(f'Dates are identical = {False}')
+                    getting_json_data = self.request_get(request_params(date_range_for_the_next_request))
+
+            print(self.tasks)
         except Exception as error:
             print(error)
 
