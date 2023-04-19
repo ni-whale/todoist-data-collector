@@ -5,6 +5,7 @@ import json
 from datetime import date, datetime, timedelta
 from dateutil import parser
 from operator import itemgetter
+from todoist_api_python.api import TodoistAPI
 
 load_dotenv('//home/ni_whale/Documents/projects/Python/storage.env')
 
@@ -47,6 +48,7 @@ class TodoistApi:
         # self.TODOIST_API_URL = "https://api.todoist.com/sync/v9/sync"
         self.headers = {'Authorization': f'Bearer {self.TODOIST_API_TOKEN}'}
         self.tasks = []
+        self.rest_api = TodoistAPI(self.TODOIST_API_TOKEN)
 
     def tasks_collection(self, todoist_data):
         # with open('date.json', 'w') as f:
@@ -63,7 +65,6 @@ class TodoistApi:
         todoist_data = response.json()
         return todoist_data
 
-
     def todoist_api_call(self):
         get_to_the_end = False  # It will have a False while till we get tasks for the whole month
         getting_json_data = self.request_get(
@@ -71,7 +72,10 @@ class TodoistApi:
         # with the limit of 200 items;
         try:
             while not get_to_the_end:
-                until_date_for_the_next_query = (parser.parse(self.tasks_collection(getting_json_data)).replace(hour=00, minute=00, second=00).isoformat()).replace("+00:00", "")
+                until_date_for_the_next_query = (
+                    parser.parse(self.tasks_collection(getting_json_data)).replace(hour=00, minute=00,
+                                                                                   second=00).isoformat()).replace(
+                    "+00:00", "")
                 date_range_for_the_next_request = [get_previous_month()[0],
                                                    until_date_for_the_next_query]  # we are
                 # getting the list of 'since' date from the previous month and 'until' from the date of the last task
@@ -85,9 +89,23 @@ class TodoistApi:
                     getting_json_data = self.request_get(request_params(date_range_for_the_next_request))
 
             print(self.tasks)
+            print(f'{len(self.tasks[0])}, {len(self.tasks[1])}')
         except Exception as error:
             print(error)
 
+    def labels_get(self):
+        try:
+            labels = self.rest_api.get_shared_labels()
+            print(labels)
+        except Exception as error:
+            print(error)
+
+    def projects_get(self):
+        try:
+            projects = self.rest_api.get_projects()
+            print(projects)
+        except Exception as error:
+            print(error)
 # last_item = list(todoist_data['items'])[-1::]
 # # print(last_item)
 #
